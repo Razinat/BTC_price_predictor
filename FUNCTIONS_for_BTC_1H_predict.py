@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------#
 #----------------------------------------------------author: Evstifeev A.I.-----#
 #----------------------------------------------------email: Raz1nad@yandex.ru---#
-#----------------------------------------------------last_edit: 31.10.2020------#
+#----------------------------------------------------last_edit: 14.11.2020------#
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -375,6 +375,49 @@ def predict_accuracy(predict,percent,d_ind,y,y_test,cash, cash_start, fl_print, 
         plt.grid(axis='both', alpha=.9)
         plt.show
     return (cash, accuracy)
+
+
+# Функция вывода депозита по линейной модели
+def deposit_linear_model(predict,d_ind,y,y_test,cash, cash_start, fl_print, fl_print_trades, x_date, yname, fl_stats, data_plot, X_np, X_train):
+    from matplotlib import pylab
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+    import pandas as pd
+    from pandas import DataFrame
+    from numpy import round
+    cash_point, index_time_list = [], []
+    number  = 0                                                           # счётчик неуспешных прогнозов
+    counter = 0                                                           # счётчик успешных прогнозов
+    for i in range(len(predict)-1):
+        if predict[i] == 1:                                               # Если определили первый класс
+
+            # Анализируем, какой класс спрогнозирован, какой реально
+            if y_test[i]==1:                                              # Если в выборке 1 класс и в классификации
+                counter+=1                                                # Увеличиваем число успешных отнесений
+                number+=1
+            else:
+                number+=1
+            # Считаем отношение цен закрытия двух свеч:
+            if fl_print_trades:
+                print ('Цена изменилась на:','\033[1m',+ 100*y[yname][d_ind+i+1],'%','\033[0m \n')
+            index_time_list.append(x_date[d_ind+i+1])                     # Записываем лист с индексами даты каждой точки
+            cash = cash*y[yname][d_ind+i+1]+cash
+            cash_point.append(cash)
+    cash_pointDF = DataFrame(cash_point)
+    cash_pointDF.index = index_time_list
+    if fl_stats:
+        print ('Успешных прогнозов:', counter, 'Неуспешных:', number-counter)
+        print ('Стартовый депозит:', cash_start, '$', 'Конечный депозит:', round(cash,0), '$')
+    # Смотрим на депозит
+    index_time_list.clear()
+    cash_point.clear()
+    if fl_print:
+        cash_pointDF.plot(grid=True, color='red', title = 'График депозита по линейной модели, $')
+        plt.grid(axis='both', alpha=.9)
+        plt.show
+        (data_plot[yname][-(X_np.shape[0] - X_train.shape[0]):]).plot(secondary_y=True, grid=True,
+                                                                      label="BTC_PRICE",
+                                                                      title='Статистика депозита и ценовое движение').legend(loc=4)
 
 
 # Функция подбора оптимального доверительного интервала:
